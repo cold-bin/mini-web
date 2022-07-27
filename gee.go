@@ -11,7 +11,7 @@ import (
 	"strings"
 )
 
-// HandlerFunc defines the request handler used by gee
+// HandlerFunc defines the request handler used
 type HandlerFunc func(*Context)
 
 // Engine implement the interface of ServeHTTP
@@ -32,7 +32,7 @@ type (
 	}
 )
 
-// New is the constructor of gee.Engine
+// New is the constructor of Engine
 func New() *Engine {
 	engine := &Engine{router: newRouter()}
 	engine.RouterGroup = &RouterGroup{engine: engine}
@@ -73,15 +73,15 @@ func (group *RouterGroup) addRoute(method string, comp string, handler HandlerFu
 
 // GET defines the method to add GET request
 func (group *RouterGroup) GET(pattern string, handler HandlerFunc) {
-	group.addRoute("GET", pattern, handler)
+	group.addRoute(http.MethodGet, pattern, handler)
 }
 
 // POST defines the method to add POST request
 func (group *RouterGroup) POST(pattern string, handler HandlerFunc) {
-	group.addRoute("POST", pattern, handler)
+	group.addRoute(http.MethodPost, pattern, handler)
 }
 
-// create static handler
+// createStaticHandler create static handler
 func (group *RouterGroup) createStaticHandler(relativePath string, fs http.FileSystem) HandlerFunc {
 	absolutePath := path.Join(group.prefix, relativePath)
 	fileServer := http.StripPrefix(absolutePath, http.FileServer(fs))
@@ -116,9 +116,13 @@ func (engine *Engine) LoadHTMLGlob(pattern string) {
 
 // Run defines the method to start a http server
 func (engine *Engine) Run(addr string) (err error) {
+	if addr == "" {
+		addr = ":8080"
+	}
 	return http.ListenAndServe(addr, engine)
 }
 
+// implement the ServeHTTP to let all requests will pass this gate
 func (engine *Engine) ServeHTTP(w http.ResponseWriter, req *http.Request) {
 	var middlewares []HandlerFunc
 	for _, group := range engine.groups {
